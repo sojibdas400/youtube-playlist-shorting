@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouTube Playlist Sorting</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>YouTube Playlist Sorting</h1>
+        <div class="form-group">
+            <label for="playlist-input">YouTube Playlist URL:</label>
+            <input type="text" class="form-control" id="playlist-input" placeholder="Enter YouTube Playlist URL">
+        </div>
+        <button type="button" class="btn btn-primary" id="sort-button">Sort Playlist</button>
+        <table class="table table-striped" id="playlist-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Upload Date</th>
+                    <th>Video Length</th>
+                    <th>Likes</th>
+                    <th>Comments</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
