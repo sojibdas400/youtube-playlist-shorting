@@ -1,7 +1,8 @@
 $(document).ready(function () {
     // Initialize DataTable
-    var table = $("#videoTable").DataTable();
-
+    var table = $("#videoTable").DataTable({
+        lengthMenu: [10, 25, 50, 75, 100, 250, 500, 1000],
+    });
     // Event handler for the form submission
     $("#searchForm").submit(function (event) {
         event.preventDefault();
