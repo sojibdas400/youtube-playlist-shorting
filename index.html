@@ -1,35 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>YouTube Playlist Sorting</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Search</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
 </head>
+
 <body>
-    <div class="container">
-        <h1>YouTube Playlist Sorting</h1>
-        <div class="form-group">
-            <label for="playlist-input">YouTube Playlist URL:</label>
-            <input type="text" class="form-control" id="playlist-input" placeholder="Enter YouTube Playlist URL">
-        </div>
-        <button type="button" class="btn btn-primary" id="sort-button">Sort Playlist</button>
-        <table class="table table-striped" id="playlist-table">
+
+    <div class="container mt-5">
+        <h1>YouTube Video Search</h1>
+        <form id="searchForm" class="mt-3">
+            <div class="form-group">
+                <label for="searchInput">Search for videos:</label>
+                <input id="searchInput" type="text" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="dateFrom">Upload Date From:</label>
+                <input id="dateFrom" type="date" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="dateTo">Upload Date To:</label>
+                <input id="dateTo" type="date" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        <table id="videoTable" class="table mt-3">
             <thead>
                 <tr>
                     <th>Title</th>
-                    <th>Upload Date</th>
                     <th>Video Length</th>
+                    <th>Upload Date</th>
                     <th>Likes</th>
-                    <th>Comments</th>
+                    <th>Views</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
     </div>
 
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
-    <script src="script.js"></script>
+
+    <!-- DataTables JavaScript -->
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+
+    <script src="script.js">
+    </script>
+
 </body>
+
 </html>
