@@ -1,147 +1,113 @@
-$(document).ready(function () {
-    // Initialize DataTable
-    var table = $("#videoTable").DataTable({
-        lengthMenu: [10, 25, 50, 75, 100, 250, 500, 1000],
-    });
-    // Event handler for the form submission
-    $("#searchForm").submit(function (event) {
-        event.preventDefault();
-
-        // Get user input
-        var searchQuery = $("#searchInput").val();
-        var dateFrom = $("#dateFrom").val();
-        var dateTo = $("#dateTo").val();
-        var apiKey = $("#apiKey").val();
-
-        if (!apiKey) {
-            apiKey = "AIzaSyCE-3a0xnoM8lVjmojr8TAMpaEl94mEPag";
-        }
-
-        // Build the API request parameters
-        var apiParams = {
-            part: "snippet",
-            q: searchQuery,
-            key: apiKey,
-            maxResults: 1000, // Change the number to the desired maximum results
-        };
-
-        if (dateFrom) {
-            apiParams.publishedAfter = dateFrom + "T00:00:00Z";
-        }
-
-        // Set dateTo to today's date if not provided
-        if (!dateTo) {
-            var today = new Date();
-            dateTo = today.toISOString().split("T")[0];
-        }
-        apiParams.publishedBefore = dateTo + "T23:59:59Z";
-
-        // Make API request to search for videos
-        $.get(
-            "https://www.googleapis.com/youtube/v3/search",
-            apiParams,
-            function (data) {
-                // Clear existing table data
-                table.clear().draw();
-
-                // Process search results
-                data.items.forEach(function (item) {
-                    var videoId = item.id.videoId;
-                    var title = item.snippet.title;
-                    var uploadDate = item.snippet.publishedAt;
-
-                    // Create a link to the video
-                    var videoLink =
-                        '<a href="https://www.youtube.com/watch?v=' +
-                        videoId +
-                        '" target="_blank">' +
-                        title +
-                        "</a>";
-
-                    // Make API request to retrieve video details
-                    $.get(
-                        "https://www.googleapis.com/youtube/v3/videos",
-                        {
-                            part: "contentDetails,statistics",
-                            id: videoId,
-                            key: apiKey,
+$(document).ready(function() {
+    $('#sort-button').click(function() {
+        var playlistUrl = $('#playlist-input').val();
+        if (playlistUrl) {
+            var playlistId = extractPlaylistId(playlistUrl);
+            $.ajax({
+                url: 'https://www.googleapis.com/youtube/v3/playlistItems',
+                dataType: 'json',
+                data: {
+                    part: 'snippet',
+                    maxResults: 50,
+                    playlistId: playlistId,
+                    key: 'AIzaSyDjieCRye5T3oMUGna3uE9fqZ6XQMemtXU'
+                },
+                success: function(response) {
+                    var playlistData = [];
+                    var videoIds = []; // Store video IDs to fetch video length
+                    
+                    $.each(response.items, function(index, item) {
+                        var videoData = item.snippet;
+                        playlistData.push({
+                            title: '<a href="https://www.youtube.com/watch?v=' + videoData.resourceId.videoId + '" target="_blank">' + videoData.title + '</a>',
+                            uploadDate: videoData.publishedAt,
+                            videoId: videoData.resourceId.videoId,
+                            likes: 0, // Retrieve likes count using YouTube API
+                            comments: 0 // Retrieve comments count using YouTube API
+                        });
+                        videoIds.push(videoData.resourceId.videoId); // Add video ID to fetch video length
+                    });
+                    
+                    // Fetch video length using YouTube API
+                    $.ajax({
+                        url: 'https://www.googleapis.com/youtube/v3/videos',
+                        dataType: 'json',
+                        data: {
+                            part: 'contentDetails',
+                            id: videoIds.join(','),
+                            key: 'AIzaSyDjieCRye5T3oMUGna3uE9fqZ6XQMemtXU'
                         },
-                        function (videoData) {
-                            console.log(videoData);
-                            // Extract video duration
-                            var duration =
-                                videoData.items[0].contentDetails.duration;
-                            var videoLength = parseVideoDuration(duration);
+                        success: function(response) {
+                            $.each(response.items, function(index, item) {
+                                var videoId = item.id;
+                                var duration = item.contentDetails.duration;
+                                var videoLength = parseISO8601Duration(duration);
+                                playlistData[index].videoLength = videoLength;
+                            });
 
-                            // Extract video likes count
-                            var likesCount =
-                                videoData.items[0].statistics.likeCount;
-                            var viewssCount =
-                                videoData.items[0].statistics.viewCount;
-
-                            // Create a row for each video
-                            table.row
-                                .add([
-                                    videoLink,
-                                    videoLength,
-                                    uploadDate,
-                                    likesCount,
-                                    viewssCount,
-                                ])
-                                .draw();
-
-                            // Make API request to retrieve video statistics for rating
-                            $.get(
-                                "https://www.googleapis.com/youtube/v3/videos",
-                                {
-                                    part: "statistics",
-                                    id: videoId,
-                                    key: apiKey,
-                                },
-                                function (statData) {
-                                    // Extract video rating
-                                    var videoRating =
-                                        statData.items[0].statistics
-                                            .averageRating;
-
-                                    // Update the rating column in the DataTable
-                                    var rowIndex = table
-                                        .column(0)
-                                        .data()
-                                        .indexOf(videoLink);
-                                    if (rowIndex >= 0) {
-                                        table
-                                            .cell(rowIndex, 4)
-                                            .data(videoRating);
-                                        table.draw();
-                                    }
-                                }
-                            );
+                            $('#playlist-table').DataTable({
+                                data: playlistData,
+                                columns: [
+                                    { data: 'title', orderable: false },
+                                    { data: 'uploadDate' },
+                                    { data: 'videoLength' },
+                                    { data: 'likes' },
+                                    { data: 'comments' }
+                                ]
+                            });
+                        },
+                        error: function(xhr, status, error) {
+                            console.log('Error: ' + error);
                         }
-                    );
-                });
-            }
-        );
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.log('Error: ' + error);
+                }
+            });
+        }
     });
 });
 
-// Function to parse the video duration from ISO 8601 format
-function parseVideoDuration(duration) {
-    const matches = duration.match(/[0-9]+[HMS]/g);
-    let hours = 0;
-
-    matches.forEach((part) => {
-        const unit = part.charAt(part.length - 1);
-        const value = parseInt(part.slice(0, -1));
-
-        if (unit === "H") {
-            hours += value;
-        } else if (unit === "M") {
-            hours += value / 60;
-        } else if (unit === "S") {
-            hours += value / 3600;
+function extractPlaylistId(url) {
+    var playlistId = '';
+    if (url.includes('list=')) {
+        var regex = /[?&]list=([^&#]*)/i;
+        var match = regex.exec(url);
+        if (match && match[1]) {
+            playlistId = match[1];
         }
-    });
+    } else if (url.includes('/playlist?list=')) {
+        var parts = url.split('/playlist?list=');
+        if (parts.length > 1) {
+            playlistId = parts[1].split('&')[0];
+        }
+    } else if (url.includes('/watch?')) {
+        var parts = url.split('/watch?');
+        if (parts.length > 1) {
+            var queryParams = new URLSearchParams(parts[1]);
+            playlistId = queryParams.get('list');
+        }
+    }
+    return playlistId;
+}
 
-    return hours.toFixed(2) + "h";
+function parseISO8601Duration(duration) {
+    var match = duration.match(/P(\d+Y)?(\d+W)?(\d+D)?T(\d+H)?(\d+M)?(\d+S)?/);
+
+    var years = parseInt(match[1]) || 0;
+    var weeks = parseInt(match[2]) || 0;
+    var days = parseInt(match[3]) || 0;
+    var hours = parseInt(match[4]) || 0;
+    var minutes = parseInt(match[5]) || 0;
+    var seconds = parseInt(match[6]) || 0;
+
+    var totalMinutes = years * 365 * 24 * 60 +
+        weeks * 7 * 24 * 60 +
+        days * 24 * 60 +
+        hours * 60 +
+        minutes +
+        Math.round(seconds / 60);
+
+    return Math.floor(totalMinutes / 60) + 'h ' + (totalMinutes % 60) + 'm';
 }
